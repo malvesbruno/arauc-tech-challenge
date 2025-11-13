@@ -145,8 +145,24 @@ class _MyAppState extends State<MyApp> {
       drawingService.saveAllStrokes();
       // transforma a lista de polygons em um JSON
       jsonDesenho = drawingService.savePolygonsToJson();
-      // salva os dados no banco de dados da AWS
-      cloudService.salvarDesenho(jsonDesenho, weekNumber);
+      // Se não houver polygons, apaga o item do banco para poupar espaço
+      if (drawingService.polygons.isEmpty){
+        try{
+          cloudService.apagarDesenho(weekNumber);
+        } catch (e){
+          print('error $e');
+        }
+        
+      }
+      else{
+        // se houver, salva os dados no banco de dados da AWS
+        try{
+          cloudService.salvarDesenho(jsonDesenho, weekNumber);
+        } catch (e){
+          print('error $e');
+        }
+        
+      }
       // sai do modo edição
       isEditing = false;
     });
