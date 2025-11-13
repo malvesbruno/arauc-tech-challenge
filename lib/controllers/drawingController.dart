@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/drawingService.dart';
 
+
+// controla as funções de desenho
+/// [drawingService] service que criar os desenhos
+/// [mapKey] key do map
+/// [mapController] controlador do map
+
 class DrawingController {
   final DrawingService drawingService;
   final GlobalKey mapKey;
@@ -15,6 +21,7 @@ class DrawingController {
   });
 
   // === ERASER ===
+  // apaga os polygons próximos ao clicar
   Future<void> onEraseTap(Offset localPosition) async {
     final controller = await mapController.future;
     final mapBox = mapKey.currentContext!.findRenderObject() as RenderBox;
@@ -37,6 +44,7 @@ class DrawingController {
   }
 
   // === DRAW START ===
+  // inicia o desenho
   Future<void> onPanStart(
     DragStartDetails details,
     Color Function() getColor,
@@ -66,6 +74,7 @@ class DrawingController {
   }
 
   // === DRAW UPDATE ===
+  // atualiza o desenho ao mover do dedo
   Future<void> onPanUpdate(
     DragUpdateDetails details, {
     required bool isEditing,
@@ -90,6 +99,7 @@ class DrawingController {
   }
 
   // === DRAW END ===
+  // finaliza o desenho
   void onPanEnd() {
     drawingService.finishLastStroke();
   }

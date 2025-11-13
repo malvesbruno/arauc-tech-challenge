@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+// Modelo do stroke (linha)
 class Stroke {
   final String id;
   final List<Offset> points; // Offsets em pixels (para CustomPaint)
