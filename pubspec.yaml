@@ -31,15 +31,21 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-  font_awesome_icon_class: ^0.0.6
-  google_maps_flutter: ^2.6.0
-  xml: ^6.5.0
-  flutter_dotenv: ^5.1.0
-  http: ^1.1.0
-  intl: ^0.18.1
+  cupertino_icons: ^1.0.8 # Icons base do flutter
+  font_awesome_icon_class: ^0.0.6 # Icons utilizados no projeto
+  google_maps_flutter: ^2.6.0 # Dependencia do mapa do google
+  xml: ^6.5.0 # Um carregador de xml
+  flutter_dotenv: ^5.1.0 # Responsável por acessar as informações do .env
+  http: ^1.1.0 # Responsável por fazer requisições na API
+  intl: ^0.18.1 # Reponsável pela gestão de tempo e horários no app
+  flutter_launcher_icons: "^0.14.4" # Responsável por adicionar o logo da Arauc no app
+
+
+# Configurações para o logo da Arauc funcionar no app
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
 
 dev_dependencies:
   flutter_test:

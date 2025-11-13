@@ -4,6 +4,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- Responsável por fazer o mapa funcionar -->
         <meta-data
                 android:name="com.google.android.geo.API_KEY"
                 android:value="AIzaSyCjhG2de_0bzAtB-4zCdXZ7--0oc-BHKJ4"/>

@@ -6,12 +6,26 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:xml/xml.dart';
 import './converter.dart';
 
+// Classe do serviço responsável por gerenciar desenhos (traços e polígonos) sobre o mapa. 
 class DrawingService extends ChangeNotifier {
-  final List<Stroke> strokes = [];
-  final Set<Polygon> polygons = {};
-  final Converter converter = Converter();
+  final List<Stroke> strokes = []; // lista de strokes
+  final Set<Polygon> polygons = {}; // lista de polygons
+  final Converter converter = Converter(); // objeto da classe Converter
 
-  double eraseThresholdMeters = 15.0;
+  double eraseThresholdMeters = 15.0; // Distância máxima (em metros) para detectar e apagar polígonos próximos a um clique
+
+
+  //Inicia um novo traço com base nas coordenadas locais e normalizadas do mapa
+
+  /// - [id]: identificador único do traço.
+  /// - [startLocal]: ponto inicial no sistema de coordenadas da tela.
+  /// - [normalizedStart]: ponto inicial normalizado (proporcional à área visível do mapa).
+  /// - [color]: cor do traço.
+  /// - [width]: espessura do traço.
+  /// - [visibleRegionAtStart]: região do mapa visível no início do traço.
+  /// - [mapSizeAtStart]: tamanho do widget do mapa no início do traço.
+  ///
+  /// Retorna o [Stroke] criado.
 
   Stroke startStroke({
     required String id,
@@ -36,6 +50,7 @@ class DrawingService extends ChangeNotifier {
     return stroke;
   }
 
+  /// Adiciona um novo ponto (coordenada local) ao traço atual.
   void updateStrokeWithLocal(Offset local) {
     if (strokes.isEmpty) return;
     final last = strokes.last;
@@ -43,19 +58,22 @@ class DrawingService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adiciona um novo ponto normalizado ao traço atual.
   void addNormalizedToLast(Offset normalized) {
     if (strokes.isEmpty) return;
     strokes.last.normalizedPoints.add(normalized);
     notifyListeners();
   }
 
+  /// Finaliza o traço atual, removendo traços vazios por segurança.
   void finishLastStroke() {
-    // remove empty strokes defensively
     strokes.removeWhere((s) => s.points.isEmpty || s.normalizedPoints.isEmpty);
     notifyListeners();
   }
 
-  // Remove points near a local position (used by eraser while editing strokes)
+  /// Remove pontos próximos a uma posição local na tela (usado como borracha).
+  ///
+  /// [pixelThreshold] define a distância máxima, em pixels, para apagar pontos.
   void erasePointsAtLocal(Offset local, {double pixelThreshold = 20.0}) {
     for (var stroke in strokes) {
       stroke.points.removeWhere((p) => (p - local).distance < pixelThreshold);
@@ -64,7 +82,10 @@ class DrawingService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Convert strokes to polygons (same logic do _saveDrawing) ---
+  /// Converte um traço em um [Polygon] baseado na área visível do mapa.
+  ///
+  /// O traço precisa ter ao menos 3 pontos normalizados e informações de região visível
+  /// e tamanho do mapa no momento do desenho.
   void convertStrokeToPolygon(Stroke stroke) {
     if (stroke.normalizedPoints.isEmpty) return;
     if (stroke.visibleRegionAtStart == null || stroke.mapSizeAtStart == null) return;
@@ -92,9 +113,8 @@ class DrawingService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Convert all valid strokes and clear them
+  /// Converte todos os traços válidos para polígonos e limpa a lista de traços.
   void saveAllStrokes() {
-    // remove invalid
     strokes.removeWhere((s) => s.normalizedPoints.isEmpty);
     for (final s in List<Stroke>.from(strokes)) {
       convertStrokeToPolygon(s);
@@ -103,7 +123,8 @@ class DrawingService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Erase polygon by map tap (local->LatLng conversion done by caller or pass function) ---
+   /// Apaga um polígono tocado no mapa, se o ponto [tapped] estiver dentro ou
+  /// suficientemente próximo (≤ [eraseThresholdMeters]).
   Future<void> erasePolygonAtLatLng(LatLng tapped) async {
     Polygon? toRemove;
     for (final poly in polygons) {
@@ -133,6 +154,7 @@ class DrawingService extends ChangeNotifier {
 
   // --- Small helpers ---
 
+  /// Verifica se um ponto [point] está dentro de um [polygon] (algoritmo do raio ímpar).
   bool _pointInPolygon(LatLng point, List<LatLng> polygon) {
     final x = point.longitude;
     final y = point.latitude;
@@ -147,6 +169,7 @@ class DrawingService extends ChangeNotifier {
     return inside;
   }
 
+  /// Calcula a menor distância (em metros) entre um ponto [p] e um segmento [a]-[b].
   double _distancePointToSegmentMeters(LatLng p, LatLng a, LatLng b) {
     final meanLat = (p.latitude + a.latitude + b.latitude) / 3.0 * pi / 180.0;
     final mPerDegLat = 111132.92 - 559.82 * cos(2 * meanLat) + 1.175 * cos(4 * meanLat);
@@ -174,13 +197,20 @@ class DrawingService extends ChangeNotifier {
     return sqrt(dx * dx + dy * dy);
   }
 
-  // utility: clear everything
+   // Utilitários gerais
+
+    /// Limpa todos os traços e polígonos.
   void clearAll() {
     strokes.clear();
     polygons.clear();
     notifyListeners();
   }
 
+
+  // Importação / Exportação
+
+
+    /// Carrega um polígono a partir de um arquivo KML no [path].
   Future<void> loadKmlPolygon(String path) async {
   final kmlString = await rootBundle.loadString(path);
   final xmlDoc = XmlDocument.parse(kmlString);
@@ -203,8 +233,11 @@ class DrawingService extends ChangeNotifier {
   notifyListeners();
 }
 
+/// Converte o conjunto atual de polígonos em JSON.
 String savePolygonsToJson() => converter.polygonsToJson(polygons);
 
+
+ /// Carrega polígonos a partir de um JSON e atualiza o estado.
 void loadPolygonsFromJson(String jsonString) {
   polygons.clear();
   polygons.addAll( converter.polygonsFromJson(jsonString));
