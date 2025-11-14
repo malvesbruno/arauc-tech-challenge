@@ -28,6 +28,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders.putAll(
+                mutableMapOf(
+                    "GOOGLE_MAPS_API_KEY" to (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
+                )
+            )
     }
 
     buildTypes {
